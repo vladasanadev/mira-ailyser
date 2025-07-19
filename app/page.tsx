@@ -6,10 +6,70 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [aiScore, setAiScore] = useState<number | null>(null);
+  const [showScore, setShowScore] = useState(false);
+
+  // Function to calculate AI replacement score based on CV text
+  const calculateAIScore = (extractedText: string): number => {
+    const text = extractedText.toLowerCase();
+    let score = 50; // Base score
+    
+    // Skills that decrease replacement risk
+    const safeSkills = ['leadership', 'management', 'creative', 'strategy', 'innovation', 'emotional intelligence', 'communication', 'negotiation', 'mentoring', 'public speaking'];
+    const safeCareers = ['ceo', 'director', 'manager', 'consultant', 'teacher', 'therapist', 'artist', 'designer'];
+    
+    // Skills that increase replacement risk
+    const riskSkills = ['data entry', 'repetitive', 'routine', 'automated', 'basic', 'simple tasks', 'administrative'];
+    const riskCareers = ['clerk', 'cashier', 'operator', 'assistant'];
+    
+    safeSkills.forEach(skill => {
+      if (text.includes(skill)) score -= Math.random() * 15 + 5;
+    });
+    
+    safeCareers.forEach(career => {
+      if (text.includes(career)) score -= Math.random() * 20 + 10;
+    });
+    
+    riskSkills.forEach(skill => {
+      if (text.includes(skill)) score += Math.random() * 15 + 5;
+    });
+    
+    riskCareers.forEach(career => {
+      if (text.includes(career)) score += Math.random() * 20 + 10;
+    });
+    
+    // Add some randomness for fun
+    score += (Math.random() - 0.5) * 20;
+    
+    return Math.max(5, Math.min(95, Math.round(score)));
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score < 30) return '#10b981'; // Green
+    if (score < 60) return '#f59e0b'; // Yellow
+    return '#ef4444'; // Red
+  };
+
+  const getScoreEmoji = (score: number) => {
+    if (score < 20) return '🦾';
+    if (score < 40) return '😎';
+    if (score < 60) return '🤔';
+    if (score < 80) return '😬';
+    return '🤖';
+  };
+
+  const getScoreMessage = (score: number) => {
+    if (score < 20) return 'You are irreplaceable!';
+    if (score < 40) return 'Pretty safe from robots!';
+    if (score < 60) return 'Some risk, but adaptable!';
+    if (score < 80) return 'Time to upskill!';
+    return 'Welcome our robot overlords!';
+  };
 
   const handleFileSelect = (file: File) => {
     if (file.type === 'application/pdf') {
       setSelectedFile(file);
+      setShowScore(false); // Hide score when new file is selected
     } else {
       alert('Please select a PDF file.');
     }
@@ -50,11 +110,41 @@ export default function Home() {
     
     setIsUploading(true);
     
-    // TODO: Implement actual file upload to backend
-    setTimeout(() => {
+    try {
+      // Create FormData to send the file
+      const formData = new FormData();
+      formData.append('pdf', selectedFile);
+      
+      // Make API call to backend
+      const response = await fetch('http://localhost:5001/upload-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        // Calculate AI replacement score based on extracted text
+        const score = calculateAIScore(result.extracted_text || '');
+        setAiScore(score);
+        setShowScore(true);
+        
+        // Clear the selected file after successful upload
+        setSelectedFile(null);
+      } else {
+        throw new Error(result.message || 'Failed to upload PDF');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error occurred'}
+      
+Please make sure:
+- The backend server is running on http://localhost:5001
+- Your PDF file is valid and under 16MB
+- You have a stable internet connection`);
+    } finally {
       setIsUploading(false);
-      alert('PDF uploaded successfully!');
-    }, 2000);
+    }
   };
 
   const removeFile = () => {
@@ -63,7 +153,57 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50" style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
-      <div className="container mx-auto p-6" style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
+      
+      {/* Minimalistic Metallic Header */}
+      <header className="py-6" style={{ 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        padding: '24px 0',
+        position: 'relative'
+      }}>
+        <div className="container mx-auto px-6 text-center" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
+          <h1 style={{ 
+            fontSize: 'clamp(2.5rem, 6vw, 3.5rem)', 
+            fontWeight: '300', 
+            lineHeight: 1.2,
+            background: 'linear-gradient(135deg, #e2e8f0 0%, #ffffff 50%, #cbd5e1 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            letterSpacing: '-0.02em',
+            fontFamily: 'system-ui, -apple-system, sans-serif'
+          }}>
+            How likely are you replaced by AI?
+          </h1>
+        </div>
+      </header>
+
+      <div className="container mx-auto p-6" style={{ maxWidth: '1200px', margin: '0 auto', padding: '48px 24px' }}>
+        
+        {/* AI Score Badge */}
+        {showScore && aiScore !== null && (
+          <div className="mb-8 flex justify-center">
+            <div style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: '20px',
+              padding: '24px 32px',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+              transform: 'scale(1.05)',
+              animation: 'bounce 0.5s ease-out',
+              textAlign: 'center',
+              color: 'white',
+              minWidth: '300px'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '12px' }}>{getScoreEmoji(aiScore)}</div>
+              <div style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '8px' }}>
+                {aiScore}% Risk
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '300', opacity: 0.9 }}>
+                {getScoreMessage(aiScore)}
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* 2-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
@@ -108,113 +248,119 @@ export default function Home() {
                 backgroundColor: dragActive 
                   ? '#eff6ff' 
                   : selectedFile 
-                    ? '#f0fdf4' 
-                    : 'transparent',
+                    ? '#ecfdf5' 
+                    : '#ffffff',
                 borderRadius: '8px',
                 padding: '32px',
                 textAlign: 'center',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                cursor: 'pointer'
               }}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
+              onClick={() => document.getElementById('fileInput')?.click()}
             >
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={handleFileInputChange}
-                className="hidden"
-                style={{ display: 'none' }}
-                id="pdf-upload"
-              />
-              
               {selectedFile ? (
-                <div className="space-y-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                  <div className="w-12 h-12 mx-auto bg-green-100 rounded-full flex items-center justify-center" style={{ width: '48px', height: '48px', backgroundColor: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg className="w-6 h-6 text-green-600" style={{ width: '24px', height: '24px', color: '#16a34a' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-green-700 font-medium" style={{ color: '#15803d', fontWeight: '500', marginBottom: '4px' }}>{selectedFile.name}</p>
-                    <p className="text-green-600 text-sm" style={{ color: '#16a34a', fontSize: '14px' }}>
-                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
+                <div style={{ color: '#059669' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>📄</div>
+                  <p style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>
+                    {selectedFile.name}
+                  </p>
+                  <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                    {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                  </p>
                   <button
-                    onClick={removeFile}
-                    className="text-red-600 hover:text-red-700 text-sm underline"
-                    style={{ color: '#dc2626', fontSize: '14px', textDecoration: 'underline', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFile();
+                    }}
+                    style={{
+                      marginTop: '12px',
+                      color: '#dc2626',
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      textDecoration: 'underline'
+                    }}
                   >
                     Remove file
                   </button>
                 </div>
               ) : (
-                <div className="space-y-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                  <div className="w-12 h-12 mx-auto bg-gray-100 rounded-full flex items-center justify-center" style={{ width: '48px', height: '48px', backgroundColor: '#f3f4f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg className="w-6 h-6 text-gray-400" style={{ width: '24px', height: '24px', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-gray-700 font-medium" style={{ color: '#374151', fontWeight: '500', marginBottom: '8px' }}>
-                      Drag and drop your PDF here
-                    </p>
-                    <p className="text-gray-500 text-sm" style={{ color: '#6b7280', fontSize: '14px', marginBottom: '4px' }}>
-                      or{' '}
-                      <label htmlFor="pdf-upload" className="text-blue-600 hover:text-blue-700 cursor-pointer underline" style={{ color: '#2563eb', textDecoration: 'underline', cursor: 'pointer' }}>
-                        browse files
-                      </label>
-                    </p>
-                    <p className="text-gray-400 text-xs mt-1" style={{ color: '#9ca3af', fontSize: '12px' }}>
-                      PDF files only, max 10MB
-                    </p>
-                  </div>
+                <div style={{ color: '#6b7280' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>📁</div>
+                  <p style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>
+                    {dragActive ? 'Drop your PDF here' : 'Click to upload or drag and drop'}
+                  </p>
+                  <p style={{ fontSize: '14px' }}>
+                    PDF files only (max 16MB)
+                  </p>
                 </div>
               )}
+              
+              <input
+                id="fileInput"
+                type="file"
+                accept=".pdf"
+                onChange={handleFileInputChange}
+                style={{ display: 'none' }}
+              />
             </div>
 
             {/* Upload Button */}
-            <button
-              onClick={handleUpload}
-              disabled={!selectedFile || isUploading}
-              className={`w-full mt-6 py-3 px-4 rounded-lg font-medium transition-colors ${
-                selectedFile && !isUploading
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-              style={{
-                width: '100%',
-                marginTop: '24px',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                fontWeight: '500',
-                border: 'none',
-                cursor: selectedFile && !isUploading ? 'pointer' : 'not-allowed',
-                backgroundColor: selectedFile && !isUploading ? '#2563eb' : '#e5e7eb',
-                color: selectedFile && !isUploading ? 'white' : '#9ca3af',
-                transition: 'all 0.2s'
-              }}
-            >
-              {isUploading ? (
-                <div className="flex items-center justify-center space-x-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" style={{ width: '16px', height: '16px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                  <span>Uploading...</span>
-                </div>
-              ) : (
-                'Upload PDF'
-              )}
-            </button>
+            {selectedFile && (
+              <button
+                onClick={handleUpload}
+                disabled={isUploading}
+                style={{
+                  width: '100%',
+                  marginTop: '24px',
+                  backgroundColor: isUploading ? '#9ca3af' : '#3b82f6',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  cursor: isUploading ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                {isUploading ? (
+                  <>
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      border: '2px solid #ffffff',
+                      borderTop: '2px solid transparent',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }}></div>
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    📤 Get AI Risk Score
+                  </>
+                )}
+              </button>
+            )}
 
-            {/* Features List */}
-            <div className="mt-8" style={{ marginTop: '32px' }}>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4" style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>
-                What happens next:
+            {/* What You'll Get Section */}
+            <div style={{ marginTop: '32px', padding: '20px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', marginBottom: '16px' }}>
+                What you'll get:
               </h3>
               <div className="space-y-2" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div className="flex items-center space-x-3" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
-                  <span className="text-gray-700 text-sm" style={{ color: '#374151', fontSize: '14px' }}>AI analysis of your CV</span>
+                  <span className="text-gray-700 text-sm" style={{ color: '#374151', fontSize: '14px' }}>AI replacement score</span>
                 </div>
                 <div className="flex items-center space-x-3" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
@@ -222,13 +368,27 @@ export default function Home() {
                 </div>
                 <div className="flex items-center space-x-3" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
-                  <span className="text-gray-700 text-sm" style={{ color: '#374151', fontSize: '14px' }}>Career recommendations</span>
+                  <span className="text-gray-700 text-sm" style={{ color: '#374151', fontSize: '14px' }}>Career insights</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Add CSS animations */}
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes bounce {
+          0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0) scale(1); }
+          40%, 43% { transform: translate3d(0,-8px,0) scale(1.05); }
+          70% { transform: translate3d(0,-4px,0) scale(1.02); }
+          90% { transform: translate3d(0,-1px,0) scale(1.01); }
+        }
+      `}</style>
     </div>
   );
 }

@@ -25,15 +25,38 @@ client = weaviate.connect_to_weaviate_cloud(
 
 print(client.is_ready())  # Should print: `True`
 
-pdf_for_mira = client.collections.create(
-    name="Pdf_for_mira",
-    properties=[  # ✅ Add these!
-        Property(name="content", data_type=DataType.TEXT),
-        Property(name="title", data_type=DataType.TEXT),
-        # Add other properties as needed
-    ],
-    vector_config=Configure.Vectors.text2vec_openai()
-)
+# Try to get existing collection or create new one
+try:
+    pdf_for_mira = client.collections.get("Pdf_for_mira")
+    print("Using existing Pdf_for_mira collection")
+except:
+    # Create collection if it doesn't exist
+    try:
+        pdf_for_mira = client.collections.create(
+            name="Pdf_for_mira",
+            properties=[
+                Property(name="text", data_type=DataType.TEXT),
+                Property(name="chunk_id", data_type=DataType.INT),
+                Property(name="length", data_type=DataType.INT),
+                Property(name="word_count", data_type=DataType.INT),
+            ],
+            # Use the text2vec-openai vectorizer
+            vectorizer_config=weaviate.classes.config.Configure.Vectorizer.text2vec_openai()
+        )
+        print("Created new Pdf_for_mira collection")
+    except Exception as e:
+        print(f"Error creating collection: {e}")
+        # If that fails too, try without vectorizer config
+        pdf_for_mira = client.collections.create(
+            name="Pdf_for_mira",
+            properties=[
+                Property(name="text", data_type=DataType.TEXT),
+                Property(name="chunk_id", data_type=DataType.INT),
+                Property(name="length", data_type=DataType.INT),
+                Property(name="word_count", data_type=DataType.INT),
+            ]
+        )
+        print("Created collection without vectorizer config")
 
 
 def extract_pdf_text(pdf_path: str) -> str:
@@ -54,7 +77,7 @@ def extract_pdf_text(pdf_path: str) -> str:
         for page in pages:
             text_content += page.extract_text()
         
-        print(text_content)
+        print(f"Extracted {len(text_content)} characters from PDF")
         return text_content.strip()
         
     except Exception as e:
@@ -119,25 +142,69 @@ def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200) -> List[Di
     return chunks
 
 
-def test_pdf_upload_direct_weaviate(pdf_path: str = "./backend/cv-front-end.pdf"):
-    pdf_for_mira = client.collections.get("Pdf_for_mira")
+def process_user_pdf(pdf_path: str) -> Dict[str, Any]:
+    """
+    Process a user-uploaded PDF file and upload to Weaviate
+    
+    Args:
+        pdf_path: Path to the user-uploaded PDF file
+        
+    Returns:
+        Processing results with success status and details
+    """
+    try:
+        pdf_for_mira = client.collections.get("Pdf_for_mira")
 
-    with pdf_for_mira.batch.fixed_size(batch_size=200) as batch:
-        data = chunk_text(extract_pdf_text(pdf_path))
-        for d in data:
-            batch.add_object(
-                {
-                    "text": d["text"],
-                    "chunk_id": d["chunk_id"],
-                    "length": d["length"],
-                    "word_count": d["word_count"],
-                }
-            )
-            if batch.number_errors > 10:
-                print("Batch import stopped due to excessive errors.")
-                break
+        with pdf_for_mira.batch.fixed_size(batch_size=200) as batch:
+            # Extract text and chunk it
+            extracted_text = extract_pdf_text(pdf_path)
+            chunks = chunk_text(extracted_text)
+            
+            # Add chunks to batch
+            for chunk in chunks:
+                batch.add_object({
+                    "text": chunk["text"],
+                    "chunk_id": chunk["chunk_id"],
+                    "length": chunk["length"],
+                    "word_count": chunk["word_count"],
+                })
+                
+                if batch.number_errors > 10:
+                    print("Batch import stopped due to excessive errors.")
+                    break
 
-    failed_objects = pdf_for_mira.batch.failed_objects
-    if failed_objects:
-        print(f"Number of failed imports: {len(failed_objects)}")
-        print(f"First failed object: {failed_objects[0]}")
+        # Check for failed objects
+        failed_objects = pdf_for_mira.batch.failed_objects
+        failed_count = len(failed_objects) if failed_objects else 0
+        success_count = len(chunks) - failed_count
+        
+        result = {
+            "success": True,
+            "total_chunks": len(chunks),
+            "successful_uploads": success_count,
+            "failed_uploads": failed_count,
+            "extracted_text_length": len(extracted_text),
+            "message": f"Successfully processed PDF with {len(chunks)} chunks"
+        }
+        
+        if failed_objects:
+            print(f"Number of failed imports: {failed_count}")
+            print(f"First failed object: {failed_objects[0]}")
+            result["error_details"] = f"Failed to upload {failed_count} chunks"
+            
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": f"Failed to process PDF: {str(e)}"
+        }
+
+
+# Backward compatibility - keep the old function name but make it require a path
+def test_pdf_upload_direct_weaviate(pdf_path: str):
+    """
+    Legacy function - now requires pdf_path parameter
+    """
+    return process_user_pdf(pdf_path)

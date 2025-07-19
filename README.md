@@ -1,36 +1,215 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mira AI CV Analyzer 🚀
 
-## Getting Started
+A modern AI-powered CV analysis platform that helps users understand their career risk from AI automation and provides personalized career guidance.
 
-First, run the development server:
+## Features ✨
+
+- 🎯 **AI Risk Assessment**: Analyze how likely your role is to be replaced by AI
+- 📄 **PDF Upload**: Upload your CV for AI-powered analysis
+- 🤖 **Smart Processing**: Extract and chunk text using pypdf and Weaviate
+- 💬 **Interactive Chat**: AI assistant integration for career guidance
+- 📊 **Modern UI**: Clean, responsive 2-column layout
+- ⚡ **Real-time Processing**: Immediate feedback on CV uploads
+
+## Architecture 🏗️
+
+### Frontend (Next.js + React)
+- Modern React components with TypeScript
+- Tailwind CSS for styling
+- Drag & drop PDF upload interface  
+- Responsive 2-column layout
+- Real-time file upload with progress feedback
+
+### Backend (Python + Flask)
+- Flask API server for file processing
+- pypdf for PDF text extraction
+- Weaviate vector database for embeddings
+- OpenAI integration for AI analysis
+- Comprehensive error handling and logging
+
+## Quick Start 🚀
+
+### Option 1: Use the Startup Script (Recommended)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Clone the repository
+git clone https://github.com/vladasanadev/mira-ailyser.git
+cd mira-ailyser
+
+# Create backend environment file
+cp backend/.env.example backend/.env
+# Edit backend/.env with your credentials
+
+# Run both frontend and backend
+./start-dev.sh
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Option 2: Manual Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Backend Setup**
+```bash
+cd backend
+pip install -r requirements.txt
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Create .env file with:
+# WEAVIATE_URL=your_weaviate_cluster_url
+# WEAVIATE_API_KEY=your_weaviate_api_key  
+# OPEN_AI_API=your_openai_api_key
 
-## Learn More
+python api_server.py
+```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Frontend Setup**
+```bash
+# In a new terminal
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Environment Setup 🔧
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Required Environment Variables
 
-## Deploy on Vercel
+Create `backend/.env` with:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```env
+WEAVIATE_URL=your_weaviate_cluster_url
+WEAVIATE_API_KEY=your_weaviate_api_key
+OPEN_AI_API=your_openai_api_key
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Get Your Credentials
+
+1. **Weaviate Cloud**: Sign up at [console.weaviate.cloud](https://console.weaviate.cloud)
+2. **OpenAI API**: Get your key from [platform.openai.com](https://platform.openai.com)
+
+## Usage 📖
+
+### 1. Access the Application
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:5000`
+
+### 2. Upload Your CV
+- Drag and drop a PDF file or click to browse
+- Maximum file size: 16MB
+- Supported format: PDF only
+
+### 3. AI Analysis
+- The system extracts text from your PDF
+- Text is chunked and processed with AI embeddings
+- Results are stored in Weaviate for analysis
+- Get personalized career insights
+
+### 4. Interactive Chat
+- Use the left-side chat interface
+- Ask questions about your career
+- Get AI-powered recommendations
+
+## API Endpoints 🔌
+
+### Health Check
+```bash
+curl http://localhost:5000/health
+```
+
+### Upload PDF
+```bash
+curl -X POST \
+  -F "pdf=@your-cv.pdf" \
+  http://localhost:5000/upload-pdf
+```
+
+## Project Structure 📁
+
+```
+mira-ailyser/
+├── app/                    # Next.js frontend
+│   ├── page.tsx           # Main UI component
+│   ├── layout.tsx         # App layout
+│   └── globals.css        # Global styles
+├── backend/               # Python backend
+│   ├── api_server.py      # Flask API server
+│   ├── test_pdf_upload_fixed.py  # PDF processing
+│   ├── weaviate_client.py # Database client
+│   ├── weaviate_operations.py    # DB operations
+│   ├── requirements.txt   # Python dependencies
+│   └── uploads/          # Temporary files
+├── public/               # Static assets
+├── start-dev.sh         # Development startup script
+└── package.json         # Node.js dependencies
+```
+
+## Technology Stack 🛠️
+
+### Frontend
+- **Next.js 13** - React framework
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Utility-first styling
+- **React Hooks** - State management
+
+### Backend  
+- **Flask** - Web API framework
+- **pypdf** - PDF text extraction
+- **Weaviate** - Vector database
+- **OpenAI** - AI embeddings and analysis
+- **python-dotenv** - Environment management
+
+### Development
+- **Git** - Version control
+- **ESLint** - Code linting
+- **PostCSS** - CSS processing
+
+## Development 👩‍💻
+
+### File Upload Flow
+1. User selects PDF file in frontend
+2. File is sent to Flask API via multipart/form-data
+3. Backend validates file type and size
+4. Text is extracted using pypdf
+5. Text is chunked for processing
+6. Chunks are uploaded to Weaviate with embeddings
+7. Success response returned to frontend
+8. Temporary files cleaned up
+
+### Adding New Features
+- Frontend components in `app/`
+- Backend endpoints in `backend/api_server.py`
+- Database operations in `backend/weaviate_operations.py`
+
+## Troubleshooting 🔧
+
+### Common Issues
+
+1. **"Backend server not running"**
+   - Make sure Flask server is running on port 5000
+   - Check `backend/.env` file exists with credentials
+
+2. **"Failed to upload PDF"**
+   - Ensure file is under 16MB
+   - Check file is valid PDF format
+   - Verify Weaviate connection
+
+3. **"Weaviate connection failed"**
+   - Check your `WEAVIATE_URL` and `WEAVIATE_API_KEY`
+   - Ensure Weaviate cluster is running
+
+### Logs
+- Backend logs: Check terminal running `python api_server.py`
+- Frontend logs: Check browser developer console
+- Network issues: Check browser Network tab
+
+## Contributing 🤝
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License 📄
+
+This project is licensed under the MIT License.
+
+---
+
+**Built with ❤️ for helping professionals navigate the AI revolution**

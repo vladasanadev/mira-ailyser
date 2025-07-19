@@ -1,115 +1,144 @@
-# Weaviate Backend
+# Backend API for PDF CV Analysis
 
-This backend provides functions to connect to and interact with Weaviate Cloud.
+This backend API handles PDF file uploads and processes them using Weaviate vector database for AI-powered CV analysis.
+
+## Features
+
+- **PDF Upload**: Accept and process PDF files from users
+- **Text Extraction**: Extract text content from PDF using pypdf
+- **Text Chunking**: Split text into meaningful chunks for processing
+- **Vector Storage**: Store chunks in Weaviate with embeddings
+- **API Endpoints**: RESTful API for file upload and search
 
 ## Setup
 
-1. Install dependencies:
+### 1. Environment Variables
+
+Create a `.env` file in the backend directory with:
+
+```env
+WEAVIATE_URL=your_weaviate_cluster_url
+WEAVIATE_API_KEY=your_weaviate_api_key
+OPEN_AI_API=your_openai_api_key
+```
+
+### 2. Install Dependencies
+
 ```bash
+cd backend
 pip install -r requirements.txt
 ```
 
-2. Create a `.env` file from `.env.example` and fill in your credentials:
+### 3. Run the API Server
+
 ```bash
-cp .env.example .env
+python api_server.py
 ```
 
-3. Update the `.env` file with your Weaviate Cloud credentials.
+The server will start on `http://localhost:5000`
 
-## Quick Start
+## API Endpoints
 
-### Basic Connection
-
-```python
-from weaviate_client import connect_to_weaviate_cloud, disconnect_weaviate
-
-# Connect to Weaviate Cloud
-client = connect_to_weaviate_cloud()
-
-# Use the client
-collections = client.collections.list_all()
-
-# Disconnect when done
-disconnect_weaviate()
+### Health Check
+```
+GET /health
 ```
 
-### Using Context Manager
+Returns server status.
 
-```python
-from weaviate_client import weaviate_connection
+### Upload PDF
+```
+POST /upload-pdf
+Content-Type: multipart/form-data
 
-with weaviate_connection() as client:
-    # Client is automatically connected and disconnected
-    collections = client.collections.list_all()
+Form Data:
+- pdf: PDF file (max 16MB)
 ```
 
-### High-Level Operations
-
-```python
-from weaviate_operations import create_collection, semantic_search, insert_object
-
-# Create a collection
-create_collection(
-    name="Articles",
-    properties=[
-        {"name": "title", "type": "text"},
-        {"name": "content", "type": "text"},
-        {"name": "category", "type": "text"}
-    ]
-)
-
-# Insert data
-insert_object(
-    collection_name="Articles",
-    properties={
-        "title": "AI Revolution",
-        "content": "Artificial intelligence is transforming...",
-        "category": "Technology"
-    }
-)
-
-# Search
-results = semantic_search(
-    collection_name="Articles",
-    query="artificial intelligence",
-    limit=5
-)
+**Response:**
+```json
+{
+  "success": true,
+  "message": "PDF processed successfully!",
+  "data": {
+    "filename": "example.pdf",
+    "file_size_mb": 2.5,
+    "total_chunks": 15,
+    "successful_uploads": 15,
+    "failed_uploads": 0,
+    "extracted_text_length": 5420
+  }
+}
 ```
 
-## Available Functions
+### Search CV (Coming Soon)
+```
+POST /search-cv
+Content-Type: application/json
 
-### Connection Functions (`weaviate_client.py`)
-- `connect_to_weaviate_cloud()` - Connect to Weaviate Cloud
-- `get_weaviate_client()` - Get connected client
-- `disconnect_weaviate()` - Disconnect from Weaviate
-- `weaviate_connection()` - Context manager for connections
+{
+  "query": "search query"
+}
+```
 
-### Operations (`weaviate_operations.py`)
-- `create_collection()` - Create new collection
-- `collection_exists()` - Check if collection exists
-- `list_collections()` - List all collections
-- `insert_object()` - Insert single object
-- `batch_insert()` - Batch insert multiple objects
-- `semantic_search()` - Vector-based search
-- `keyword_search()` - BM25 keyword search
-- `hybrid_search()` - Combined semantic + keyword
-- `generative_search()` - RAG with generation
+## File Processing Flow
 
-## Environment Variables
+1. **Upload**: User uploads PDF file via API
+2. **Validation**: Check file type and size
+3. **Text Extraction**: Extract text using pypdf
+4. **Chunking**: Split text into overlapping chunks
+5. **Vector Storage**: Store chunks in Weaviate with OpenAI embeddings
+6. **Cleanup**: Remove temporary files
+7. **Response**: Return processing results
 
-Required:
-- `WEAVIATE_URL` - Your Weaviate Cloud cluster URL
-- `WEAVIATE_API_KEY` - Your Weaviate API key
+## Dependencies
 
-Optional:
-- `OPENAI_API_KEY` - For OpenAI vectorizers/generators
-- `COHERE_API_KEY` - For Cohere vectorizers/generators
-- `HUGGINGFACE_API_KEY` - For Hugging Face vectorizers
+- **Flask**: Web API framework
+- **pypdf**: PDF text extraction
+- **Weaviate**: Vector database client
+- **OpenAI**: Text embeddings
+- **python-dotenv**: Environment variables
 
 ## Error Handling
 
-All functions include comprehensive error handling and logging. Check logs for detailed error information.
+The API includes comprehensive error handling for:
+- Invalid file types
+- File size limits
+- PDF processing errors
+- Weaviate connection issues
+- Temporary file cleanup
 
-## Examples
+## Development
 
-See `weaviate.txt` for comprehensive examples and advanced usage patterns. 
+### File Structure
+```
+backend/
+├── api_server.py          # Main Flask API server
+├── test_pdf_upload_fixed.py  # PDF processing functions
+├── weaviate_client.py     # Weaviate client setup
+├── weaviate_operations.py # Database operations
+├── config.py             # Configuration settings
+├── requirements.txt      # Python dependencies
+└── uploads/              # Temporary upload directory
+```
+
+### Testing
+
+You can test the API using curl:
+
+```bash
+# Health check
+curl http://localhost:5000/health
+
+# Upload PDF
+curl -X POST \
+  -F "pdf=@your-cv.pdf" \
+  http://localhost:5000/upload-pdf
+```
+
+## Integration
+
+The backend is designed to work with the Next.js frontend. Make sure both servers are running:
+
+- Frontend: `http://localhost:3000` (Next.js)
+- Backend: `http://localhost:5000` (Flask API) 
