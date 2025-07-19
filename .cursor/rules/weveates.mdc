@@ -1,0 +1,5 @@
+---
+description: Always check the `weaviate.txt` file before creating or updating Weaviate code. 
+globs:
+alwaysApply: false
+---

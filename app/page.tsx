@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleFileSelect = (file: File) => {
     if (file.type === 'application/pdf') {
@@ -46,247 +45,190 @@ export default function Home() {
     }
   };
 
-  const handleAnalyze = async () => {
+  const handleUpload = async () => {
     if (!selectedFile) return;
     
-    setIsAnalyzing(true);
+    setIsUploading(true);
     
-    // Simulate AI analysis - replace with actual backend call
+    // TODO: Implement actual file upload to backend
     setTimeout(() => {
-      setIsAnalyzing(false);
-      alert('CV Analysis complete! Check your email for detailed career guidance.');
-    }, 3000);
+      setIsUploading(false);
+      alert('PDF uploaded successfully!');
+    }, 2000);
   };
 
-  useEffect(() => {
-    // Ensure video plays and loops
-    if (videoRef.current) {
-      videoRef.current.muted = true;
-      videoRef.current.play().catch(console.error);
-    }
-  }, []);
+  const removeFile = () => {
+    setSelectedFile(null);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-      </div>
-
-      {/* Header */}
-      <header className="relative z-10 p-6 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold text-white">
-            <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Mira AI
-            </span>{' '}
-            CV Analyzer
-          </h1>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-200px)]">
+    <div className="min-h-screen bg-gray-50" style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+      <div className="container mx-auto p-6" style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
+        
+        {/* 2-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
           
-          {/* Left Side - Video Section */}
-          <div className="space-y-8">
-            <div className="text-left space-y-6">
-              <h2 className="text-5xl lg:text-6xl font-bold text-white leading-tight">
-                Transform Your
-                <br />
-                <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent bg-200% animate-gradient">
-                  Career Journey
-                </span>
-              </h2>
-              <p className="text-xl text-gray-300 leading-relaxed max-w-lg">
-                Experience the future of career guidance with our AI-powered analysis. 
-                Upload your CV and unlock personalized insights that will accelerate your professional growth.
-              </p>
-            </div>
-            
-            {/* Video Container */}
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-3xl blur opacity-75 group-hover:opacity-100 transition duration-300 bg-200% animate-gradient-xy"></div>
-              <div className="relative rounded-3xl overflow-hidden bg-black border border-gray-800">
-                <video
-                  ref={videoRef}
-                  className="w-full h-80 lg:h-96 object-cover"
-                  loop
-                  muted
-                  autoPlay
-                  playsInline
-                  poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400'%3E%3Cdefs%3E%3ClinearGradient id='grad1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='800' height='400' fill='url(%23grad1)'/%3E%3Ctext x='50%25' y='50%25' font-family='Inter, sans-serif' font-size='28' fill='white' text-anchor='middle' dy='.3em'%3EAI Career Assistant%3C/text%3E%3C/svg%3E"
-                >
-                  <source src="https://files.catbox.moe/der0ln.mp4" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              </div>
-              
-              {/* Floating elements */}
-              <div className="absolute -top-3 -right-3 w-16 h-16 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full opacity-30 blur-xl animate-float"></div>
-              <div className="absolute -bottom-3 -left-3 w-20 h-20 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-25 blur-xl animate-float-delayed"></div>
-            </div>
-
-            {/* Feature highlights */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105">
-                <div className="w-12 h-12 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-lg mb-3 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                </div>
-                <h3 className="text-white font-semibold mb-1">AI Insights</h3>
-                <p className="text-gray-400 text-sm">Deep learning analysis</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105">
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-lg mb-3 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                </div>
-                <h3 className="text-white font-semibold mb-1">Career Growth</h3>
-                <p className="text-gray-400 text-sm">Personalized roadmaps</p>
-              </div>
-            </div>
+          {/* Left Column - Iframe */}
+          <div className="bg-white rounded-lg shadow-md p-4" style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', padding: '16px' }}>
+            <h2 className="text-xl font-bold text-gray-900 mb-4" style={{ fontSize: '20px', fontWeight: 'bold', color: '#111827', marginBottom: '16px' }}>
+              AI Assistant
+            </h2>
+            <iframe 
+              src="https://bey.chat/698b3b83-9e6d-4ccd-b0f8-021677c0b6f2" 
+              width="100%" 
+              height="600px" 
+              frameBorder="0" 
+              allowFullScreen
+              allow="camera; microphone; fullscreen"
+              style={{ border: 'none', width: '100%', height: '600px', borderRadius: '8px' }}
+            />
           </div>
 
-          {/* Right Side - Upload Form */}
-          <div className="w-full">
-            <div className="relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-3xl blur-sm opacity-25"></div>
-              <div className="relative bg-white/10 backdrop-blur-xl rounded-3xl border border-white/30 p-6 lg:p-8">
-                
-                {/* Form Header */}
-                <div className="text-center mb-8">
-                  <div className="w-16 h-16 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Right Column - PDF Uploader */}
+          <div className="bg-white rounded-lg shadow-md p-6" style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', padding: '24px' }}>
+            <h2 className="text-xl font-bold text-gray-900 mb-6" style={{ fontSize: '20px', fontWeight: 'bold', color: '#111827', marginBottom: '24px' }}>
+              Upload PDF
+            </h2>
+            
+            {/* File Upload Area */}
+            <div
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                dragActive 
+                  ? 'border-blue-400 bg-blue-50' 
+                  : selectedFile 
+                    ? 'border-green-400 bg-green-50' 
+                    : 'border-gray-300 hover:border-gray-400'
+              }`}
+              style={{
+                border: dragActive 
+                  ? '2px dashed #60a5fa' 
+                  : selectedFile 
+                    ? '2px dashed #34d399' 
+                    : '2px dashed #d1d5db',
+                backgroundColor: dragActive 
+                  ? '#eff6ff' 
+                  : selectedFile 
+                    ? '#f0fdf4' 
+                    : 'transparent',
+                borderRadius: '8px',
+                padding: '32px',
+                textAlign: 'center',
+                transition: 'all 0.2s'
+              }}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={handleFileInputChange}
+                className="hidden"
+                style={{ display: 'none' }}
+                id="pdf-upload"
+              />
+              
+              {selectedFile ? (
+                <div className="space-y-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                  <div className="w-12 h-12 mx-auto bg-green-100 rounded-full flex items-center justify-center" style={{ width: '48px', height: '48px', backgroundColor: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg className="w-6 h-6 text-green-600" style={{ width: '24px', height: '24px', color: '#16a34a' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-green-700 font-medium" style={{ color: '#15803d', fontWeight: '500', marginBottom: '4px' }}>{selectedFile.name}</p>
+                    <p className="text-green-600 text-sm" style={{ color: '#16a34a', fontSize: '14px' }}>
+                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <button
+                    onClick={removeFile}
+                    className="text-red-600 hover:text-red-700 text-sm underline"
+                    style={{ color: '#dc2626', fontSize: '14px', textDecoration: 'underline', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                  >
+                    Remove file
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                  <div className="w-12 h-12 mx-auto bg-gray-100 rounded-full flex items-center justify-center" style={{ width: '48px', height: '48px', backgroundColor: '#f3f4f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg className="w-6 h-6 text-gray-400" style={{ width: '24px', height: '24px', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
                   </div>
-                  <h3 className="text-3xl font-bold text-white mb-3">
-                    Upload Your CV
-                  </h3>
-                  <p className="text-gray-300 text-lg">
-                    Get instant AI analysis and unlock your career potential
-                  </p>
-                </div>
-
-                {/* File Upload Area */}
-                <div
-                  className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${
-                    dragActive 
-                      ? 'border-cyan-400 bg-cyan-500/20 scale-105' 
-                      : selectedFile 
-                        ? 'border-green-400 bg-green-500/20' 
-                        : 'border-white/40 hover:border-purple-400 hover:bg-purple-500/10 hover:scale-102'
-                  }`}
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                >
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileInputChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    id="cv-upload"
-                  />
-                  
-                  <div className="space-y-4">
-                    {selectedFile ? (
-                      <>
-                        <div className="w-16 h-16 mx-auto bg-green-500/30 rounded-full flex items-center justify-center border-2 border-green-400">
-                          <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-green-400 font-medium text-lg">{selectedFile.name}</p>
-                          <p className="text-green-300 text-sm">
-                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-16 h-16 mx-auto bg-purple-500/30 rounded-full flex items-center justify-center border-2 border-purple-400/60">
-                          <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-xl font-semibold text-white mb-2">
-                            Drag & drop your CV here
-                          </p>
-                          <p className="text-gray-300 mb-2">
-                            or{' '}
-                            <label htmlFor="cv-upload" className="text-cyan-400 hover:text-cyan-300 cursor-pointer font-medium underline underline-offset-2 transition-colors">
-                              browse files
-                            </label>
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            PDF files only, max 10MB
-                          </p>
-                        </div>
-                      </>
-                    )}
+                  <div>
+                    <p className="text-gray-700 font-medium" style={{ color: '#374151', fontWeight: '500', marginBottom: '8px' }}>
+                      Drag and drop your PDF here
+                    </p>
+                    <p className="text-gray-500 text-sm" style={{ color: '#6b7280', fontSize: '14px', marginBottom: '4px' }}>
+                      or{' '}
+                      <label htmlFor="pdf-upload" className="text-blue-600 hover:text-blue-700 cursor-pointer underline" style={{ color: '#2563eb', textDecoration: 'underline', cursor: 'pointer' }}>
+                        browse files
+                      </label>
+                    </p>
+                    <p className="text-gray-400 text-xs mt-1" style={{ color: '#9ca3af', fontSize: '12px' }}>
+                      PDF files only, max 10MB
+                    </p>
                   </div>
                 </div>
+              )}
+            </div>
 
-                {/* Analysis Button */}
-                <button
-                  onClick={handleAnalyze}
-                  disabled={!selectedFile || isAnalyzing}
-                  className={`w-full mt-8 py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 ${
-                    selectedFile && !isAnalyzing
-                      ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:from-cyan-400 hover:via-purple-400 hover:to-pink-400 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-105 bg-200%'
-                      : 'bg-gray-700/50 text-gray-500 cursor-not-allowed border border-gray-600/50'
-                  }`}
-                >
-                  {isAnalyzing ? (
-                    <div className="flex items-center justify-center space-x-3">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Analyzing CV...</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center space-x-2">
-                      <span>Analyze My CV</span>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    </div>
-                  )}
-                </button>
+            {/* Upload Button */}
+            <button
+              onClick={handleUpload}
+              disabled={!selectedFile || isUploading}
+              className={`w-full mt-6 py-3 px-4 rounded-lg font-medium transition-colors ${
+                selectedFile && !isUploading
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+              style={{
+                width: '100%',
+                marginTop: '24px',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontWeight: '500',
+                border: 'none',
+                cursor: selectedFile && !isUploading ? 'pointer' : 'not-allowed',
+                backgroundColor: selectedFile && !isUploading ? '#2563eb' : '#e5e7eb',
+                color: selectedFile && !isUploading ? 'white' : '#9ca3af',
+                transition: 'all 0.2s'
+              }}
+            >
+              {isUploading ? (
+                <div className="flex items-center justify-center space-x-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" style={{ width: '16px', height: '16px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                  <span>Uploading...</span>
+                </div>
+              ) : (
+                'Upload PDF'
+              )}
+            </button>
 
-                {/* Features List */}
-                <div className="mt-8 space-y-4">
-                  <h4 className="font-bold text-white text-lg mb-4">What you'll discover:</h4>
-                  <div className="space-y-3">
-                    {[
-                      { icon: '🎯', title: 'Skills Gap Analysis', desc: 'Identify missing skills in your field' },
-                      { icon: '🚀', title: 'Career Path Recommendations', desc: 'Personalized growth roadmap' },
-                      { icon: '📊', title: 'Industry Insights', desc: 'Latest trends and opportunities' },
-                      { icon: '💡', title: 'Interview Preparation', desc: 'AI-powered interview coaching' },
-                      { icon: '💰', title: 'Salary Benchmarking', desc: 'Know your market value' }
-                    ].map((feature, index) => (
-                      <div key={index} className="flex items-center space-x-4 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-200 hover:scale-105">
-                        <div className="text-xl flex-shrink-0">{feature.icon}</div>
-                        <div className="flex-grow">
-                          <h5 className="text-white font-medium text-sm">{feature.title}</h5>
-                          <p className="text-gray-400 text-xs">{feature.desc}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+            {/* Features List */}
+            <div className="mt-8" style={{ marginTop: '32px' }}>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4" style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>
+                What happens next:
+              </h3>
+              <div className="space-y-2" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div className="flex items-center space-x-3" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
+                  <span className="text-gray-700 text-sm" style={{ color: '#374151', fontSize: '14px' }}>AI analysis of your CV</span>
+                </div>
+                <div className="flex items-center space-x-3" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
+                  <span className="text-gray-700 text-sm" style={{ color: '#374151', fontSize: '14px' }}>Personalized feedback</span>
+                </div>
+                <div className="flex items-center space-x-3" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
+                  <span className="text-gray-700 text-sm" style={{ color: '#374151', fontSize: '14px' }}>Career recommendations</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
