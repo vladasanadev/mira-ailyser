@@ -214,10 +214,9 @@ Please make sure:
               AI Assistant
             </h2>
             <iframe 
-              src="https://bey.chat/698b3b83-9e6d-4ccd-b0f8-021677c0b6f2" 
+              src="https://bey.chat/3090f07a-5a09-4093-9114-d8c1332d7a74" 
               width="100%" 
               height="600px" 
-              frameBorder="0" 
               allowFullScreen
               allow="camera; microphone; fullscreen"
               style={{ border: 'none', width: '100%', height: '600px', borderRadius: '8px' }}
